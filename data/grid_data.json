@@ -1,0 +1,24 @@
+{
+  "nodes": [
+    {"id": "bus1", "type": "slack", "x": 100, "y": 150, "voltage": 1.04, "angle": 0.0, "active_power": 0, "reactive_power": 0},
+    {"id": "bus2", "type": "generator", "x": 200, "y": 100, "voltage": 1.025, "angle": 0.0, "active_power": 163, "reactive_power": 0},
+    {"id": "bus3", "type": "generator", "x": 200, "y": 200, "voltage": 1.025, "angle": 0.0, "active_power": 85, "reactive_power": 0},
+    {"id": "bus4", "type": "load", "x": 300, "y": 50, "voltage": 1.0, "angle": 0.0, "active_power": 0, "reactive_power": 0},
+    {"id": "bus5", "type": "load", "x": 300, "y": 150, "voltage": 1.0, "angle": 0.0, "active_power": -125, "reactive_power": -50},
+    {"id": "bus6", "type": "load", "x": 300, "y": 250, "voltage": 1.0, "angle": 0.0, "active_power": -90, "reactive_power": -30},
+    {"id": "bus7", "type": "load", "x": 400, "y": 100, "voltage": 1.0, "angle": 0.0, "active_power": 0, "reactive_power": 0},
+    {"id": "bus8", "type": "load", "x": 400, "y": 200, "voltage": 1.0, "angle": 0.0, "active_power": -100, "reactive_power": -35},
+    {"id": "bus9", "type": "load", "x": 500, "y": 150, "voltage": 1.0, "angle": 0.0, "active_power": 0, "reactive_power": 0}
+  ],
+  "links": [
+    {"source": "bus1", "target": "bus4", "resistance": 0.0, "reactance": 0.0576, "active_power": 0, "reactive_power": 0},
+    {"source": "bus4", "target": "bus5", "resistance": 0.01, "reactance": 0.085, "active_power": 0, "reactive_power": 0},
+    {"source": "bus5", "target": "bus6", "resistance": 0.017, "reactance": 0.092, "active_power": 0, "reactive_power": 0},
+    {"source": "bus3", "target": "bus6", "resistance": 0.0, "reactance": 0.0586, "active_power": 0, "reactive_power": 0},
+    {"source": "bus6", "target": "bus9", "resistance": 0.039, "reactance": 0.17, "active_power": 0, "reactive_power": 0},
+    {"source": "bus2", "target": "bus7", "resistance": 0.0, "reactance": 0.0625, "active_power": 0, "reactive_power": 0},
+    {"source": "bus7", "target": "bus8", "resistance": 0.0085, "reactance": 0.072, "active_power": 0, "reactive_power": 0},
+    {"source": "bus8", "target": "bus9", "resistance": 0.0119, "reactance": 0.1008, "active_power": 0, "reactive_power": 0},
+    {"source": "bus4", "target": "bus7", "resistance": 0.032, "reactance": 0.161, "active_power": 0, "reactive_power": 0}
+  ]
+}

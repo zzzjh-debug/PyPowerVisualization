@@ -1,0 +1,436 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- 添加节点编辑模态框 -->
+  <div id="node-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4" id="modal-title">编辑节点</h3>
+      <form id="node-edit-form">
+        <input type="hidden" id="node-id" />
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">节点类型</label>
+          <select id="node-type" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <option value="load">负荷</option>
+            <option value="pv">PV节点</option>
+            <option value="slack">平衡节点</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">电压 (pu)</label>
+            <input
+              type="number"
+              id="node-voltage"
+              step="0.01"
+              min="0.9"
+              max="1.1"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">相角 (°)</label>
+            <input
+              type="number"
+              id="node-angle"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">有功功率 (MW)</label>
+            <input
+              type="number"
+              id="node-active-power"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">无功功率 (Mvar)</label>
+            <input
+              type="number"
+              id="node-reactive-power"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancel-edit" class="px-4 py-2 border border-gray-300 rounded-md">取消</button>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 连接线编辑模态框 -->
+  <div id="link-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">编辑连接线</h3>
+      <form id="link-edit-form">
+        <input type="hidden" id="link-id" />
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">连接线名称</label>
+          <input type="text" id="link-name" class="w-full px-3 py-2 border border-gray-300 rounded-md" readonly />
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">电阻 (pu)</label>
+            <input type="number" id="link-resistance" step="0.001" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">电抗 (pu)</label>
+            <input type="number" id="link-reactance" step="0.001" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+          </div>
+        </div>
+        <div class="mb-4">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">功率信息</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label class="block text-gray-600 mb-1">发出端有功 (MW)</label>
+              <input type="number" id="link-from-active" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-1">发出端无功 (Mvar)</label>
+              <input type="number" id="link-from-reactive" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-1">接收端有功 (MW)</label>
+              <input type="number" id="link-to-active" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-1">接收端无功 (Mvar)</label>
+              <input type="number" id="link-to-reactive" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">损耗信息</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label class="block text-gray-600 mb-1">有功损耗 (MW)</label>
+              <input type="number" id="link-loss-active" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-1">无功损耗 (Mvar)</label>
+              <input type="number" id="link-loss-reactive" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" readonly />
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancel-link-edit" class="px-4 py-2 border border-gray-300 rounded-md">取消</button>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 帮助模态框 -->
+  <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">系统帮助</h3>
+        <button onclick="hideHelpModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-bold text-lg mb-2">系统功能</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>电力系统潮流可视化：直观显示电网结构和潮流分布</li>
+            <li>节点管理：添加、编辑、删除电力系统节点</li>
+            <li>连接线管理：创建和删除节点间的连接线</li>
+            <li>潮流计算：支持牛顿-拉夫逊法、快速解耦法、高斯-赛德尔法</li>
+            <li>数据可视化：节点电压分布图、线路潮流分布图</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-2">使用方法</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>添加节点：</strong>点击右侧图例中的节点类型（PV
+              
+              节点、PQ节点、平衡节点）</li>
+            <li><strong>查看节点信息：</strong>点击网络中的节点，在左侧面板查看详细信息</li>
+            <li><strong>创建连接线：</strong>点击"创建"按钮，然后依次点击两个节点</li>
+            <li><strong>删除连接线：</strong>选中连接线后，点击"删除"按钮</li>
+            <li><strong>计算潮流：</strong>设置系统参数后，点击"计算潮流"按钮</li>
+            <li><strong>视图操作：</strong>使用缩放按钮或鼠标滚轮缩放，拖拽移动视图</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-lg mb-2">节点类型说明</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>PV节点：</strong>电压恒定，有功功率可调的发电机节点（蓝色）</li>
+            <li><strong>PQ节点：</strong>有功和无功功率恒定的负荷节点（红色）</li>
+            <li><strong>平衡节点：</strong>电压和相角恒定的参考节点（紫色）</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex justify-end mt-6">
+        <button onclick="hideHelpModal()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-6">
+    <!-- 左侧控制面板 -->
+    <div class="lg:w-1/4 space-y-6">
+
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">系统参数</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">选择测试案例</label>
+            <select
+              id="case-selector"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="case9">Case 9: 9节点3发电机系统</option>
+              <option value="case14">Case 14: IEEE 14节点测试系统</option>
+              <option value="case30" selected>Case 30: 30节点6发电机系统</option>
+              <option value="case39">Case 39: 新英格兰39节点系统</option>
+              <option value="case57">Case 57: IEEE 57节点测试系统</option>
+              <option value="case118">Case 118: IEEE 118节点测试系统</option>
+              
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">基准电压 (kV)</label>
+            <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700" id="base-voltage-display">110</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">基准容量 (MVA)</label>
+            <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700" id="base-power-display">100</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">计算方法</label>
+            <select
+              id="calculation-method"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="newton-raphson">牛顿-拉夫逊法</option>
+              <option value="fast-decoupled">快速解耦法</option>
+              <option value="gauss-seidel">高斯-赛德尔法</option>
+            </select>
+          </div>
+          <button
+            id="calculate-btn"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out"
+          >
+            <i class="fa fa-calculator mr-2"></i>计算潮流
+          </button>
+        </div>
+      </div>
+
+      <!-- 连接线信息与操作模块 -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">连接线信息与操作</h2>
+        <!-- 连接线信息显示面板 -->
+        <div id="link-info-panel" class="space-y-3 mb-4">
+          <div class="text-center text-gray-500 italic">请点击网络中的连接线查看详细信息</div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            id="start-link-creation"
+            class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out"
+          >
+            <i class="fa fa-plus mr-1"></i>创建
+          </button>
+          <button
+            id="delete-link"
+            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out"
+          >
+            <i class="fa fa-trash mr-1"></i>删除
+          </button>
+          <button
+            id="cancel-link-creation"
+            class="col-span-2 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out hidden"
+          >
+            <i class="fa fa-times mr-2"></i>取消创建
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">节点信息与操作</h2>
+        <div id="node-info-panel" class="space-y-3">
+          <div class="text-center text-gray-500 italic">请点击网络中的节点查看详细信息</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧可视化区域 -->
+    <div class="lg:w-3/4 space-y-6">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">电力系统潮流可视化</h2>
+          <div class="flex space-x-2">
+            <button id="zoom-in" class="p-2 bg-gray-100 rounded">
+              <i class="fa fa-search-plus"></i>
+            </button>
+            <button id="zoom-out" class="p-2 bg-gray-100 rounded">
+              <i class="fa fa-search-minus"></i>
+            </button>
+            <button id="reset-view" class="p-2 bg-gray-100 rounded">
+              <i class="fa fa-refresh"></i>
+            </button>
+          </div>
+        </div>
+        <div class="relative">
+          <div id="power-grid" class="w-full h-[500px] bg-gray-50 rounded-lg border border-gray-200"></div>
+
+          <!-- 图例 -->
+          <div class="absolute bottom-4 right-4 bg-white/90 p-3 rounded-lg shadow-md">
+            <h4 class="font-medium mb-2 text-sm">添加节点</h4>
+            <div
+              class="flex items-center mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+              onclick="window.powerFlowApp.addNode('generator')"
+            >
+              <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+              <span class="text-xs">PV节点</span>
+            </div>
+            <div
+              class="flex items-center mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+              onclick="window.powerFlowApp.addNode('load')"
+            >
+              <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+              <span class="text-xs">PQ节点</span>
+            </div>
+            <div
+              class="flex items-center mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded"
+              onclick="window.powerFlowApp.addNode('slack')"
+            >
+              <div class="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+              <span class="text-xs">平衡节点</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">节点电压分布</h2>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-600">图表</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="voltage-display-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+              <span class="text-sm text-gray-600">表格</span>
+            </div>
+          </div>
+          <div id="voltage-chart-container" class="h-[400px]">
+            <canvas id="voltageChart" data-chart-type="bar"></canvas>
+          </div>
+          <div id="voltage-table-container" class="hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 text-base">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">节点</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">电压 (pu)</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">相角 (°)</th>
+                  </tr>
+                </thead>
+                <tbody id="voltage-table-body" class="bg-white divide-y divide-gray-200">
+                  <!-- 动态生成 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">线路潮流分布</h2>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-600">图表</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="power-flow-display-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+              <span class="text-sm text-gray-600">表格</span>
+            </div>
+          </div>
+          <div id="power-flow-chart-container" class="h-[400px]">
+            <canvas id="power-flow-chart"></canvas>
+          </div>
+          <div id="power-flow-table-container" class="hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 text-base">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">线路</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">有功功率 (MW)</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">无功功率 (Mvar)</th>
+                  </tr>
+                </thead>
+                <tbody id="power-flow-table-body" class="bg-white divide-y divide-gray-200">
+                  <!-- 动态生成 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- 替换原有统计板块 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+          <h2 class="text-xl font-bold mb-4">系统运行统计</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- 电压统计卡片 -->
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="text-sm font-semibold text-blue-800 mb-2">电压状态</h3>
+              <div class="space-y-1 text-sm">
+                <p>最高：<span id="voltage-max" class="text-blue-600">{{ stats.voltage.max }} p.u.</span></p>
+                <p>最低：<span id="voltage-min" class="text-blue-600">{{ stats.voltage.min }} p.u.</span></p>
+                <p>平均：<span id="voltage-avg" class="text-blue-600">{{ stats.voltage.avg }} p.u.</span></p>
+              </div>
+            </div>
+        
+            <!-- 功率统计卡片 -->
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h3 class="text-sm font-semibold text-green-800 mb-2">功率平衡</h3>
+              <div class="space-y-1 text-sm">
+                <p>总发电：<span id="gen-total" class="text-green-600">{{ stats.generation.total }} MW</span></p>
+                <p>线损：<span id="loss-p" class="text-green-600">{{ stats.losses.P }} MW</span></p>
+                <p>无功损耗：<span id="loss-q" class="text-green-600">{{ stats.losses.Q }} MVar</span></p>
+              </div>
+            </div>
+        
+            <!-- 网络拓扑卡片 -->
+            <div class="bg-amber-50 p-4 rounded-lg">
+              <h3 class="text-sm font-semibold text-orange-800 mb-2">网络拓扑</h3>
+              <div class="space-y-1 text-sm">
+                <p>总线路数：<span id="topology-total-branches" class="text-orange-600">{{ stats.topology.total_branches }}</span></p>
+                <p>总节点数：<span id="topology-total-buses" class="text-orange-600">{{ stats.topology.total_buses }}</span></p>
+                <p>网络密度：<span id="topology-density" class="text-orange-600">{{ stats.topology.network_density }}</span></p>
+                <p>平均连接度：<span id="topology-connectivity" class="text-orange-600">{{ stats.topology.average_connectivity }}</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/lib/d3.v7.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  // 帮助模态框控制函数
+  function showHelpModal() {
+    document.getElementById('help-modal').classList.remove('hidden');
+  }
+  
+  function hideHelpModal() {
+    document.getElementById('help-modal').classList.add('hidden');
+  }
+</script>
+{% endblock %}

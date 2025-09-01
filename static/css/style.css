@@ -1,0 +1,99 @@
+.chart-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+canvas[data-chart-type='bar'] {
+  margin-bottom: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    margin: 0 10px;
+    padding: 10px;
+  }
+
+  canvas[data-chart-type='bar'] {
+    margin-bottom: 15px;
+  }
+}
+
+.chart-container {
+  @apply transition-all duration-300 hover:shadow-lg;
+  min-height: 300px;
+}
+
+#voltageChart {
+  border-left: 4px solid #4caf50;
+}
+
+#powerFlowChart {
+  border-left: 4px solid #2196f3;
+}
+
+.stat-card {
+  @apply transition-transform duration-200 hover:scale-[1.02];
+}
+
+/* 新增响应式网格布局 */
+.chart-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  padding: 1rem;
+}
+
+.chart-wrapper {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.chart-inner {
+  position: relative;
+  height: auto; /* 将固定高度改为自适应 */
+  min-height: 300px; /* 保留最小高度确保美观 */
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+    padding: 0.5rem;
+  }
+  .chart-wrapper {
+    padding: 1rem;
+  }
+}
+
+
+/* 统计卡片动态效果 */
+.stats-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 状态颜色指示器 */
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-normal { background-color: #10B981; }
+.status-warning { background-color: #F59E0B; }
+.status-critical { background-color: #EF4444; }

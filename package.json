@@ -1,0 +1,9 @@
+{
+  "name": "power-flow-visualization",
+  "version": "1.0.0",
+  "description": "Power Flow Visualization App",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py"
+  }
+}
